@@ -1,5 +1,6 @@
 var express = require("express");
 var bodyParser = require("body-parser");
+var _ =require("underscore");
 
 var app = express();
 var PORT = process.env.PORT || 3000; //used for heroku
@@ -16,14 +17,15 @@ app.get("/todos", function(req,res){
 //Get /todos/:id
 app.get("/todos/:id", function(req,res){ //colons only used for url
 	var todoId = parseInt(req.params.id, 10); //req.params. id is always a string
-	var matchedTodo;
+	var matchedTodo = _.findWhere(todos,{id: todoId});
+	// var matchedTodo;
 	
-	//Iterate of todos aray
-	todos.forEach(function(todo){
-		if (todoId === todo.id){
-			matchedTodo = todo;
-		}
-	});
+	// //Iterate of todos aray
+	// todos.forEach(function(todo){
+	// 	if (todoId === todo.id){
+	// 		matchedTodo = todo;
+	// 	}
+	// });
 
 	if (matchedTodo){
 		res.json(matchedTodo); //shortcut to send back json data
@@ -37,7 +39,14 @@ app.get("/todos/:id", function(req,res){ //colons only used for url
 //POST - can take data 
 //  /todos
 app.post("/todos", function(req,res) {
-	var body = req.body;
+	//var body = req.body; 
+	var body = _.pick(req.body, "description", "completed");
+
+	if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0){
+		return res.status(400).send(); //bad  data provided
+	}
+
+	body.description = body.description.trim();
 
 	// add id field
 	body.id = todoNextId++;
